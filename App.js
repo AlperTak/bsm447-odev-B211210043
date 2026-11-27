@@ -9,6 +9,7 @@ import {
   StatusBar as RNStatusBar,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -20,6 +21,7 @@ export default function App() {
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [search, setSearch] = useState('');
 
   const loadAgents = useCallback(async () => {
     setLoading(true);
@@ -60,6 +62,14 @@ export default function App() {
     </View>
   );
 
+  // Tam liste (agents) korunur; ekranda yalnızca filtrelenmiş liste gösterilir.
+  const query = search.trim().toLowerCase();
+  const filteredAgents = query
+    ? agents.filter((agent) =>
+        (agent.displayName || '').toLowerCase().includes(query)
+      )
+    : agents;
+
   let content;
   if (loading) {
     content = (
@@ -79,13 +89,31 @@ export default function App() {
     );
   } else {
     content = (
-      <FlatList
-        data={agents}
-        keyExtractor={(item) => item.uuid}
-        renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-      />
+      <View style={styles.listWrapper}>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Ajan ara..."
+            placeholderTextColor="#6b7c8c"
+            value={search}
+            onChangeText={setSearch}
+            autoCapitalize="none"
+            autoCorrect={false}
+            clearButtonMode="while-editing"
+          />
+        </View>
+        <FlatList
+          data={filteredAgents}
+          keyExtractor={(item) => item.uuid}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContent}
+          keyboardShouldPersistTaps="handled"
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ListEmptyComponent={
+            query ? <Text style={styles.emptyText}>Ajan bulunamadı</Text> : null
+          }
+        />
+      </View>
     );
   }
 
@@ -116,6 +144,29 @@ const styles = StyleSheet.create({
     color: '#ece8e1',
     fontSize: 26,
     fontWeight: '800',
+  },
+  listWrapper: {
+    flex: 1,
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 14,
+  },
+  searchInput: {
+    backgroundColor: '#1b2733',
+    color: '#ece8e1',
+    borderWidth: 1,
+    borderColor: '#2a3643',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+  },
+  emptyText: {
+    color: '#9fb0bf',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 32,
   },
   listContent: {
     padding: 16,
